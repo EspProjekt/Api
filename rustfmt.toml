@@ -1,0 +1,10 @@
+blank_lines_upper_bound = 3
+hard_tabs = true
+use_field_init_shorthand = false
+fn_single_line = true
+struct_field_align_threshold = 0
+struct_lit_single_line = true
+fn_params_layout = "Compressed"
+wrap_comments = false
+comment_width = 100
+max_width = 150
