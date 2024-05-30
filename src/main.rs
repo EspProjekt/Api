@@ -3,10 +3,8 @@ use actix_web::{web, App, HttpResponse, HttpServer};
 use dotenv::dotenv;
 use state::State;
 
-pub mod modules {}
-
+pub mod modules;
 pub mod redis;
-
 pub mod router;
 pub mod state;
 
