@@ -38,7 +38,7 @@ async fn main() -> std::io::Result<()> {
             .route("/health", web::get().to(health_check))
             .route("/", web::get().to(index))
     })
-    .bind("0.0.0.0:5000")?;
+    .bind("localhost:5005")?;
 
     for addr in server.addrs() {
         println!("Server running on http://{}", addr);
