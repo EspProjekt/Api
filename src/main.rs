@@ -7,6 +7,8 @@ pub mod modules;
 pub mod redis;
 pub mod router;
 pub mod state;
+pub mod data;
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
