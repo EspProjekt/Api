@@ -1,6 +1,5 @@
 use actix_web::web::{post,  ServiceConfig};
 use crate::modules::device::DeviceController;
-
 use super::Router;
 
 

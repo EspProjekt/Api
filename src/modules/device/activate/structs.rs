@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct DeviceActivatePayload {
     pub uptime: u64,
     pub is_light_on: bool,
+    pub name: String,
 }
 
 

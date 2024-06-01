@@ -2,12 +2,12 @@ use r2d2_redis::redis::RedisError;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::env::var;
-use crate::redis::Redis;
+use crate::{errors::err::Error, redis::Redis};
 use super::device::Device;
-use super::messages::*;
+use crate::errors::messages::*;
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Debug, Deserialize)]
 pub struct DeviceList{
     pub id: Uuid,
     pub devices: Vec<Device>,
@@ -15,48 +15,53 @@ pub struct DeviceList{
 
 
 impl DeviceList{
-    pub fn new(redis: Redis) -> Result<Self, &'static str> {
+    pub fn new(redis: &Redis) -> Result<Self, Error> {
         let list = Self{
             id: Uuid::new_v4(),
             devices: Vec::new(),
         };
 
         match Self::get_from_redis(&redis){
-            Ok(s) => return Ok(s),
-            Err(_) => {},
+            Ok(list) => {
+                println!("{:#?} Device list already exists", list);
+                return Ok(list)
+            },
+            Err(_) => println!("Creating new device list"),
         }
 
         match list.set_to_redis(&redis){
             Ok(_) => Ok(list),
-            Err(_) => Err(FAILED_TO_SAVE_D_LIST),
+            Err(_) => Err(Error::new(505)),
         }
     }
 
 
-    pub fn add_device(device: Device, redis: &Redis) -> Result<(), ()> {
+    pub fn add_device(device: Device, redis: &Redis) -> Result<(), Error> {
         let mut device_list = match Self::get_from_redis(redis){
             Ok(s) => s,
-            Err(_) => return Err(()),
+            Err(_) => return Err(Error::new(404)),
         };
         
+        if device_list.devices.iter().any(|d| d.ip == device.ip){ return Err(Error::new(409)); }
         device_list.devices.push(device);
+        
         match device_list.set_to_redis(redis){
             Ok(_) => Ok(()),
-            Err(_) => Err(()),
+            Err(_) => Err(Error::new(500)),
         }
     }
 
 
-    pub fn remove_device(device_id: Uuid, redis: &Redis) -> &'static str {
+    pub fn remove_device(device_id: Uuid, redis: &Redis) -> Result<(), Error> {
         let mut device_list = match Self::get_from_redis(redis){
             Ok(d) => d,
-            Err(_) => return FAILED_TO_GET_D_LIST, 
+            Err(_) => return Err(Error::new(404)), 
         };
         
         device_list.devices.retain(|d| d.id != device_id);
         match device_list.set_to_redis(redis){
-            Ok(_) => DEVICE_REMOVED,
-            Err(_) => FAILED_TO_SAVE_D_LIST,
+            Ok(_) => Ok(()),
+            Err(_) => Err(Error::new(500)),
         }
     }
 

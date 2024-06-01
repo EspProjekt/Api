@@ -39,7 +39,9 @@ impl Redis {
 	where
 		T: DeserializeOwned,
 	{
+		println!("getting connection");
 		let mut conn = self.get_conn();
+		println!("key: {}", key);
 		let data_str: String = match conn.get(key) {
 			Ok(d) => d,
 			Err(_e) => return Err(String::from("Failed to get data.")),

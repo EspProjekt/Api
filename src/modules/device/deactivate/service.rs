@@ -7,7 +7,7 @@ impl DeviceController{
     pub async fn deactivate(req: HttpRequest) -> HttpResponse {
         let device_ip = match Utils::get_ip(req){
             Ok(ip) => ip,
-            Err(e) => return HttpResponse::BadRequest().json(e)
+            Err(e) => return e.into_response()
         };
 
         HttpResponse::Ok().json("Device deactivated")

@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::modules::device::activate::structs::DeviceActivatePayload;
 
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Device{
     pub id: Uuid,
     pub ip: String,
@@ -12,12 +12,14 @@ pub struct Device{
     pub is_light_on: bool,
     pub status: bool,
     pub last_update: u64,
+    pub name: String,
 }
 
 
 pub struct DeviceCreateData{
     pub ip: String,
     pub uptime: u64,
+    pub name: String,
     pub is_light_on: bool,
 }
 
@@ -27,6 +29,7 @@ impl DeviceCreateData {
         Self {
             ip: ip.to_string(),
             uptime: payload.uptime,
+            name: payload.name,
             is_light_on: payload.is_light_on,
         }
     }
@@ -38,6 +41,7 @@ impl Device {
         Self {
             id: Uuid::new_v4(),
             ip: data.ip,
+            name: data.name,
             uptime: data.uptime,
             is_light_on: data.is_light_on,
             status: true,

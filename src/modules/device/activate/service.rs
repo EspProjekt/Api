@@ -11,7 +11,7 @@ impl DeviceController{
     pub async fn activate(req: HttpRequest, payload: Payload, app_state: AppState) -> HttpResponse {
         let device_ip = match Utils::get_ip(req){
             Ok(ip) => ip,
-            Err(_e) => return HttpResponse::Forbidden().into()
+            Err(e) => return e.into_response()
         };
         
         let payload = payload.into_inner();
@@ -19,8 +19,8 @@ impl DeviceController{
         let device = Device::from(device_data);
 
         match DeviceList::add_device(device, &app_state.redis){
-            Ok(_) => HttpResponse::Ok().into(),
-            Err(_) => HttpResponse::InternalServerError().into()
+            Ok(_) => HttpResponse::Ok().json(device_ip),
+            Err(e) => e.into_response()
         }
     }
 }

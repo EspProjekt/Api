@@ -1,5 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{web::{self, scope}, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use data::device_list::DeviceList;
 use dotenv::dotenv;
 use router::Router;
 use state::State;
@@ -11,12 +12,14 @@ pub mod router;
 pub mod state;
 pub mod data;
 pub mod utils;
+pub mod errors;
 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 	dotenv().ok();
 	let app_data = web::Data::new(State::new());
+    DeviceList::new(&app_data.redis).unwrap();
 
 	let server = HttpServer::new(move || {
         App::new()
@@ -32,7 +35,7 @@ async fn main() -> std::io::Result<()> {
             .route("/health", web::get().to(health_check))
             .service(scope("/device").configure(Router::device))
     })
-    .bind("0.0.0.0:5010")?;
+    .bind("0.0.0.0:5000")?;
 
     for addr in server.addrs() {
         println!("Server running on http://{}", addr);
