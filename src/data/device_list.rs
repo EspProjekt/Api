@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::{env::var, net::IpAddr};
 use crate::{errors::err::Error, redis::Redis};
-use super::device::Device;
+use super::device::{self, Device, PublicDevice};
 use crate::errors::messages::*;
 
 
@@ -36,11 +36,13 @@ impl DeviceList{
     }
 
 
-    pub fn list_devices(redis: &Redis) -> Result<Vec<Device>, Error> {
-        match Self::get_from_redis(redis){
-            Ok(d) => Ok(d.devices),
-            Err(_) => Err(Error::new(404)),
-        }
+    pub fn list_devices(redis: &Redis) -> Result<Vec<PublicDevice>, Error> {
+        let device_list = match Self::get_from_redis(redis){
+            Ok(d) => d.devices,
+            Err(_) => return Err(Error::new(404)),
+        };
+
+        Ok(device_list.into_iter().map(|d| PublicDevice::from(d)).collect::<Vec<PublicDevice>>())
     }
 
 
@@ -60,19 +62,32 @@ impl DeviceList{
     }
 
 
-    pub fn remove_device(device_ip: IpAddr, redis: &Redis) -> Result<(), Error> {
-        let mut device_list = match Self::get_from_redis(redis){
+    pub fn remove_device<F>(redis: &Redis, filter: F) -> Result<(), Error>
+    where
+        F: Fn(&Device) -> bool,
+    {
+        let mut device_list = match Self::get_from_redis(redis) {
             Ok(d) => d,
-            Err(_) => return Err(Error::new(404)), 
+            Err(_) => return Err(Error::new(404)),
         };
-        
-        device_list.devices.retain(|d| d.ip != device_ip.to_string());
-        match device_list.set_to_redis(redis){
+
+        device_list.devices.retain(|d| !filter(d));
+        match device_list.set_to_redis(redis) {
             Ok(_) => Ok(()),
             Err(_) => Err(Error::new(500)),
         }
     }
 
+    
+    pub fn remove_device_by_ip(device_ip: IpAddr, redis: &Redis) -> Result<(), Error> {
+        DeviceList::remove_device(redis, |d| d.ip == device_ip.to_string())
+    }
+    
+
+    pub fn remove_device_by_id(device_id: Uuid, redis: &Redis) -> Result<(), Error> {
+        DeviceList::remove_device(redis, |d| d.id == device_id)
+    }
+    
 
     fn set_to_redis(&self, redis: &Redis) -> Result<String, RedisError>{
         redis.save(self, Self::generate_key())

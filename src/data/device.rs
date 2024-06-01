@@ -5,7 +5,7 @@ use crate::modules::device::activate::structs::DeviceActivatePayload;
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Device{
+pub struct Device {
     pub id: Uuid,
     pub ip: String,
     pub uptime: u64,
@@ -16,7 +16,18 @@ pub struct Device{
 }
 
 
-pub struct DeviceCreateData{
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PublicDevice {
+    pub id: Uuid,
+    pub uptime: u64,
+    pub is_light_on: bool,
+    pub status: bool,
+    pub last_update: u64,
+    pub name: String,
+}
+
+
+pub struct DeviceCreateData {
     pub ip: String,
     pub uptime: u64,
     pub name: String,
@@ -46,6 +57,20 @@ impl Device {
             is_light_on: data.is_light_on,
             status: true,
             last_update: chrono::Utc::now().timestamp() as u64,
+        }
+    }
+}
+
+
+impl PublicDevice{
+    pub fn from(device: Device) -> Self {
+        Self {
+            id: device.id,
+            uptime: device.uptime,
+            is_light_on: device.is_light_on,
+            status: device.status,
+            last_update: device.last_update,
+            name: device.name,
         }
     }
 }

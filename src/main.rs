@@ -20,7 +20,7 @@ async fn main() -> std::io::Result<()> {
 	dotenv().ok();
 	let app_data = web::Data::new(State::new());
     DeviceList::new(&app_data.redis).unwrap();
-
+    
 	let server = HttpServer::new(move || {
         App::new()
             .wrap(
@@ -38,9 +38,7 @@ async fn main() -> std::io::Result<()> {
     })
     .bind("0.0.0.0:5000")?;
 
-    for addr in server.addrs() {
-        println!("Server running on http://{}", addr);
-    }
+    for addr in server.addrs() {println!("Server running on http://{}", addr);}
 
     server.run().await
 }
