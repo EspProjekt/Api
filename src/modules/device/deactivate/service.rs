@@ -14,7 +14,7 @@ impl DeviceController{
         
         match DeviceList::remove_device(device_ip, &app_state.redis) {
             Ok(_) => HttpResponse::NoContent().into(),
-            Err(e) => return e.into_response(),
+            Err(e) => e.into_response(),
         }
     }
 }
