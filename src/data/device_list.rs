@@ -33,16 +33,16 @@ impl DeviceList{
     }
 
 
-    pub fn add_device(device: Device, redis: &Redis) -> &'static str {
+    pub fn add_device(device: Device, redis: &Redis) -> Result<(), ()> {
         let mut device_list = match Self::get_from_redis(redis){
             Ok(s) => s,
-            Err(_) => return FAILED_TO_GET_D_LIST,
+            Err(_) => return Err(()),
         };
         
         device_list.devices.push(device);
         match device_list.set_to_redis(redis){
-            Ok(_) => DEVICE_ADDED,
-            Err(_) => FAILED_TO_SAVE_D_LIST,
+            Ok(_) => Ok(()),
+            Err(_) => Err(()),
         }
     }
 
@@ -61,12 +61,12 @@ impl DeviceList{
     }
 
 
-    pub fn set_to_redis(&self, redis: &Redis) -> Result<String, RedisError>{
+    fn set_to_redis(&self, redis: &Redis) -> Result<String, RedisError>{
         redis.save(self, Self::generate_key())
     }
 
     
-    pub fn get_from_redis(redis: &Redis) -> Result<Self, String>{
+    fn get_from_redis(redis: &Redis) -> Result<Self, String>{
         redis.get(Self::generate_key())
     }
 

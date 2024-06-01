@@ -1,6 +1,9 @@
 pub mod conn;
 pub mod types;
 
+
+
+use types::RedisPool;
 pub struct Redis {
-	pub pool: types::RedisPool,
+	pub pool: RedisPool,
 }

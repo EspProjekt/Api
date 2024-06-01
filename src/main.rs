@@ -1,24 +1,16 @@
 use actix_cors::Cors;
-use actix_web::{web, App, HttpRequest, HttpResponse, Responder, HttpServer};
+use actix_web::{web::{self, scope}, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use dotenv::dotenv;
+use router::Router;
 use state::State;
+
 
 pub mod modules;
 pub mod redis;
 pub mod router;
 pub mod state;
 pub mod data;
-
-
-async fn index(req: HttpRequest) -> impl Responder {
-    if let Some(peer_addr) = req.peer_addr() {
-        let ip = format!("Client IP: {}", peer_addr.ip());
-        println!("Client IP: {}", ip);
-        ip
-    } else {
-        "Client IP: Not found".to_string()
-    }
-}
+pub mod utils;
 
 
 #[actix_web::main]
@@ -38,7 +30,7 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(app_data.clone())
             .route("/health", web::get().to(health_check))
-            .route("/", web::get().to(index))
+            .service(scope("/device").configure(Router::device))
     })
     .bind("0.0.0.0:5010")?;
 
