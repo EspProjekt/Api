@@ -12,7 +12,9 @@ pub mod data;
 
 async fn index(req: HttpRequest) -> impl Responder {
     if let Some(peer_addr) = req.peer_addr() {
-        format!("Client IP: {}", peer_addr.ip())
+        let ip = format!("Client IP: {}", peer_addr.ip());
+        println!("Client IP: {}", ip);
+        ip
     } else {
         "Client IP: Not found".to_string()
     }
@@ -38,7 +40,7 @@ async fn main() -> std::io::Result<()> {
             .route("/health", web::get().to(health_check))
             .route("/", web::get().to(index))
     })
-    .bind("localhost:5005")?;
+    .bind("0.0.0.0:5010")?;
 
     for addr in server.addrs() {
         println!("Server running on http://{}", addr);
