@@ -12,7 +12,7 @@ impl DeviceController{
             Err(e) => return e.into_response(),
         };
         
-        match Utils::send_request(device_ip, Method::GET, "light").await {
+        match Utils::send_request(device_ip, Method::POST, "light").await {
             Ok(_) => HttpResponse::Ok().into(),
             Err(e) => e.into_response(),
         }
