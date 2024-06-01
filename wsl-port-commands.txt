@@ -1,5 +1,0 @@
-|| te komendy robia tak zeby wszyscy mogli robic request na serwer postawiony na wsl, inaczej nie dziala ||
-######################################################################################################################
-
-New-NetFirewallRule -DisplayName "Allow Port 5000" -Direction Inbound -Protocol TCP -LocalPort 5000 -Action Allow
-netsh interface portproxy add v4tov4 listenport=5000 listenaddress=0.0.0.0 connectport=5000 connectaddress=127.0.0.1
