@@ -34,6 +34,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(app_data.clone())
             .route("/health", web::get().to(health_check))
             .service(scope("/device").configure(Router::device))
+            .service(scope("/device-list").configure(Router::device_list))
     })
     .bind("0.0.0.0:5000")?;
 

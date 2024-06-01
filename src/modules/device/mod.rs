@@ -5,7 +5,6 @@ pub mod activate {
 
 pub mod deactivate {
     pub mod service;
-    pub mod structs;
 }
 
 

@@ -36,6 +36,14 @@ impl DeviceList{
     }
 
 
+    pub fn list_devices(redis: &Redis) -> Result<Vec<Device>, Error> {
+        match Self::get_from_redis(redis){
+            Ok(d) => Ok(d.devices),
+            Err(_) => Err(Error::new(404)),
+        }
+    }
+
+
     pub fn add_device(device: Device, redis: &Redis) -> Result<(), Error> {
         let mut device_list = match Self::get_from_redis(redis){
             Ok(s) => s,
