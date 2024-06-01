@@ -7,6 +7,9 @@ pub mod deactivate {
     pub mod service;
 }
 
+pub mod light{
+    pub mod service;
+}
 
 
 pub struct DeviceController;

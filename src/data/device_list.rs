@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::{env::var, net::IpAddr};
 use crate::{errors::err::Error, redis::Redis};
-use super::device::{self, Device, PublicDevice};
+use super::device::{Device, PublicDevice};
 use crate::errors::messages::*;
 
 
@@ -80,12 +80,12 @@ impl DeviceList{
 
     
     pub fn remove_device_by_ip(device_ip: IpAddr, redis: &Redis) -> Result<(), Error> {
-        DeviceList::remove_device(redis, |d| d.ip == device_ip.to_string())
+        Self::remove_device(redis, |d| d.ip == device_ip.to_string())
     }
     
 
     pub fn remove_device_by_id(device_id: Uuid, redis: &Redis) -> Result<(), Error> {
-        DeviceList::remove_device(redis, |d| d.id == device_id)
+        Self::remove_device(redis, |d| d.id == device_id)
     }
     
 
@@ -102,5 +102,18 @@ impl DeviceList{
     fn generate_key() -> String{
         let key = var("DEVICE_LIST_KEY").expect(ENV_VAR_NOT_FOUND);
         format!("device_list:{}", key)
+    }
+
+
+    pub fn get_device_ip(device_id: Uuid) -> Result<String, Error> {
+        let device_list = match Self::get_from_redis(&Redis::connect()){
+            Ok(d) => d,
+            Err(_) => return Err(Error::new(404)),
+        };
+
+        match device_list.devices.iter().find(|d| d.id == device_id){
+            Some(d) => Ok(d.ip.clone()),
+            None => Err(Error::new(404)),
+        }
     }
 }
