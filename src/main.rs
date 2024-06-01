@@ -1,5 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{web::{self, scope}, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{web::{self, scope}, App, HttpResponse, HttpServer};
 use data::device_list::DeviceList;
 use dotenv::dotenv;
 use router::Router;

@@ -1,7 +1,7 @@
 use r2d2_redis::redis::RedisError;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use std::env::var;
+use std::{env::var, net::IpAddr};
 use crate::{errors::err::Error, redis::Redis};
 use super::device::Device;
 use crate::errors::messages::*;
@@ -52,13 +52,13 @@ impl DeviceList{
     }
 
 
-    pub fn remove_device(device_id: Uuid, redis: &Redis) -> Result<(), Error> {
+    pub fn remove_device(device_ip: IpAddr, redis: &Redis) -> Result<(), Error> {
         let mut device_list = match Self::get_from_redis(redis){
             Ok(d) => d,
             Err(_) => return Err(Error::new(404)), 
         };
         
-        device_list.devices.retain(|d| d.id != device_id);
+        device_list.devices.retain(|d| d.ip != device_ip.to_string());
         match device_list.set_to_redis(redis){
             Ok(_) => Ok(()),
             Err(_) => Err(Error::new(500)),
