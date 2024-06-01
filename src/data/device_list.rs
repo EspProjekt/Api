@@ -116,4 +116,14 @@ impl DeviceList{
             None => Err(Error::new(404)),
         }
     }
+
+
+    pub fn list_ips(redis: &Redis) -> Vec<String>{
+        let device_list = match Self::get_from_redis(redis){
+            Ok(d) => d,
+            Err(_) => return Vec::new(),
+        };
+
+        device_list.devices.iter().map(|d| d.ip.clone()).collect::<Vec<String>>()
+    }
 }
