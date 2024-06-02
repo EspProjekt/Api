@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::{env::var, net::IpAddr};
 use crate::{errors::err::Error, redis::Redis};
-use super::device::{Device, PublicDevice};
+use super::device::{Device, DeviceStatusResponse, PublicDevice, Status};
 use crate::errors::messages::*;
 
 
@@ -125,5 +125,22 @@ impl DeviceList{
         };
 
         device_list.devices.iter().map(|d| d.ip.clone()).collect::<Vec<String>>()
+    }
+
+    
+    pub fn update_device_status(new_status: Status, device_ip: String, redis: &Redis) {
+        let device_list = match Self::get_from_redis(redis) {
+            Ok(list) => list,
+            Err(_) => return,
+        };
+
+        let mut device = match device_list.devices.into_iter().find(|d| d.ip == device_ip) {
+            Some(d) => d,
+            None => return,
+        };
+
+        device.update_status(new_status);
+        Self::remove_device_by_ip(device_ip.parse().unwrap(), redis).unwrap();
+        Self::add_device(device, redis).unwrap();
     }
 }

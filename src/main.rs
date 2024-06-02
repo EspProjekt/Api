@@ -2,6 +2,7 @@ use actix_cors::Cors;
 use actix_web::{web::{self, scope}, App, HttpResponse, HttpServer};
 use data::device_list::DeviceList;
 use dotenv::dotenv;
+use modules::device_list::status_interval::service::DevicesStatusesInterval;
 use router::Router;
 use state::State;
 
@@ -19,8 +20,10 @@ pub mod errors;
 async fn main() -> std::io::Result<()> {
 	dotenv().ok();
 	let app_data = web::Data::new(State::new());
-    DeviceList::new(&app_data.redis).unwrap();
     
+    DeviceList::new(&app_data.redis).unwrap();
+    DevicesStatusesInterval::new(app_data.clone()).await;
+
 	let server = HttpServer::new(move || {
         App::new()
             .wrap(
