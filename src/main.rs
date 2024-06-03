@@ -2,7 +2,7 @@ use actix_cors::Cors;
 use actix_web::{web::{self, scope}, App, HttpResponse, HttpServer};
 use data::device_list::DeviceList;
 use dotenv::dotenv;
-use modules::device_list::status_interval::service::DevicesStatusesInterval;
+use modules::device_list::status_checker::service::DevicesStatusChecker;
 use router::Router;
 use state::State;
 
@@ -22,7 +22,7 @@ async fn main() -> std::io::Result<()> {
 	let app_data = web::Data::new(State::new());
     
     DeviceList::new(&app_data.redis).unwrap();
-    DevicesStatusesInterval::new(app_data.clone()).await;
+    DevicesStatusChecker::run(app_data.clone()).await;
 
 	let server = HttpServer::new(move || {
         App::new()

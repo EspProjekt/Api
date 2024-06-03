@@ -1,0 +1,1 @@
+pub const STATUS_CHECKER_INTERVAL_DEALY: u64 = 5; // seconds

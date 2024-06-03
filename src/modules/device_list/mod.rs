@@ -2,7 +2,7 @@ pub mod devices{
     pub mod service;
 }
 
-pub mod status_interval{
+pub mod status_checker{
     pub mod service;
 }
 

@@ -1,13 +1,13 @@
 use actix_web::{web::Path, HttpResponse};
 use reqwest::Method;
 use uuid::Uuid;
-use crate::{data::device_list::DeviceList, modules::device::DeviceController, utils::Utils};
+use crate::{data::device_list::DeviceList, modules::device::DeviceController, state::AppState, utils::Utils};
 
 
 impl DeviceController{
-    pub async fn switch_light(device_id: Path<Uuid>) -> HttpResponse{
+    pub async fn switch_light(device_id: Path<Uuid>, app_state: AppState) -> HttpResponse{
         let device_id = device_id.into_inner();
-        let device_ip = match DeviceList::get_device_ip(device_id) {
+        let device_ip = match DeviceList::get_device_ip(device_id, &app_state.redis) {
             Ok(ip) => ip,
             Err(e) => return e.into_response(),
         };

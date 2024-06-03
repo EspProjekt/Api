@@ -3,8 +3,10 @@ use super::Utils;
 use crate::errors::err::Error;
 
 
+pub type ReqResult = Result<(Response, String), (Error, String)>;
+
 impl Utils {
-    pub async fn send_request(ip: String, method: Method, path: &str) -> Result<(Response, String), (Error, String)>{
+    pub async fn send_request(ip: String, method: Method, path: &str) -> ReqResult{
         let uri = format!("http://{}/{}", ip, path);
         let client = Client::new();
     

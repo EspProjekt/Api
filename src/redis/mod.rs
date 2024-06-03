@@ -4,7 +4,7 @@ pub mod types;
 
 
 use types::RedisPool;
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Redis {
 	pub pool: RedisPool,
 }

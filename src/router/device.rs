@@ -8,6 +8,7 @@ impl Router {
 		router_cfg
         .route("/activate", post().to(DeviceController::activate))
         .route("/deactivate/ip", delete().to(DeviceController::deactivate_by_ip))
-        .route("/deactivate/{id}", delete().to(DeviceController::deactivate_by_id));
+        .route("/deactivate/{id}", delete().to(DeviceController::deactivate_by_id))
+        .route("/light/{id}", post().to(DeviceController::switch_light));
 	}
 }

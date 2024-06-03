@@ -13,7 +13,7 @@ impl DeviceController{
             Ok(ip) => ip,
             Err(e) => return e.into_response()
         };
-        
+
         let payload = payload.into_inner();
         let device_data = DeviceCreateData::from(device_ip, payload);
         let device = Device::from(device_data);
