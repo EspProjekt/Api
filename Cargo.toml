@@ -25,3 +25,5 @@ actix-xml = "0.2.0"
 quick-xml = { version = "0.31.0", features = ["serialize"] }
 thiserror = "1.0.61"
 reqwest = "0.12.4"
+log = "0.4.21"
+env_logger = "0.11.3"

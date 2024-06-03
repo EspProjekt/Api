@@ -1,7 +1,7 @@
 use std::net::IpAddr;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::modules::device::activate::structs::DeviceActivatePayload;
+use crate::{modules::device::activate::structs::DeviceActivatePayload, utils::constants::MAX_RETRIES};
 
 
 pub type Status = DeviceStatusResponse;
@@ -16,6 +16,8 @@ pub struct Device {
     pub status: bool,
     pub last_update: u64,
     pub name: String,
+    pub attempts: u8,
+    pub retry: bool,
 }
 
 
@@ -68,13 +70,33 @@ impl Device {
             is_light_on: data.is_light_on,
             status: true,
             last_update: chrono::Utc::now().timestamp() as u64,
+            attempts: 0,
+            retry: false,
         }
     }
+
 
     pub fn update_status(&mut self, new_status: Status) {
         self.is_light_on = new_status.is_light_on;
         self.uptime = new_status.uptime;
         self.last_update = chrono::Utc::now().timestamp() as u64;
+        self.status = true;
+    }
+
+
+    pub fn handle_attempts(&mut self) {
+        self.attempts += 1;
+        
+        if self.attempts >= MAX_RETRIES {
+            self.status = false;
+            self.retry = false;
+        }
+    }
+
+
+    pub fn handle_reconnect(&mut self) {
+        self.retry = true;
+        self.attempts = 0;
     }
 }
 

@@ -5,6 +5,8 @@ use dotenv::dotenv;
 use modules::device_list::status_checker::service::DevicesStatusChecker;
 use router::Router;
 use state::State;
+use env_logger::Env;
+use log::{info, warn, error};
 
 
 pub mod modules;
@@ -18,12 +20,13 @@ pub mod errors;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-	dotenv().ok();
+    dotenv().ok();
 	let app_data = web::Data::new(State::new());
-    
+
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     DeviceList::new(&app_data.redis).unwrap();
     DevicesStatusChecker::run(app_data.clone()).await;
-
+    
 	let server = HttpServer::new(move || {
         App::new()
             .wrap(
@@ -41,7 +44,7 @@ async fn main() -> std::io::Result<()> {
     })
     .bind("0.0.0.0:5000")?;
 
-    for addr in server.addrs() {println!("Server running on http://{}", addr);}
+    for addr in server.addrs() {info!("Server running on http://{}", addr);}
 
     server.run().await
 }

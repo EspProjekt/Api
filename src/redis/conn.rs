@@ -8,6 +8,7 @@ use serde::de::DeserializeOwned;
 use serde_json::to_string;
 use std::env;
 
+
 impl Redis {
 	pub fn connect() -> Self {
 		let redis_url = env::var("REDIS_URL").expect("REDIS_URL must be set");
@@ -18,9 +19,11 @@ impl Redis {
 		}
 	}
 
+
 	pub fn get_conn(&self) -> RedisConn {
 		self.pool.get().expect("Failed to get connection.")
 	}
+
 
 	pub fn save<T>(&self, value: T, key: String) -> Result<String, RedisError>
 	where
@@ -34,6 +37,7 @@ impl Redis {
 			Err(e) => Err(e),
 		}
 	}
+
 
 	pub fn get<T>(&self, key: String) -> Result<T, String>
 	where

@@ -11,5 +11,8 @@ pub mod light{
     pub mod service;
 }
 
+pub mod reconnect {
+    pub mod service;
+}
 
 pub struct DeviceController;

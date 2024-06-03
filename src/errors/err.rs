@@ -32,6 +32,7 @@ impl ErrorResponse {
 			500 => INTERNAL_SERVER_ERROR_MSG,
 			422 => UNPROCESSABLE_ENTITY_MSG,
             403 => FORBIDDEN_MSG,
+			409 => CONFLICT_MSG,
 
 			_ => INTERNAL_SERVER_ERROR_MSG,
 		}.to_string()

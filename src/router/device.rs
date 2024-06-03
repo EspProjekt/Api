@@ -9,6 +9,7 @@ impl Router {
         .route("/activate", post().to(DeviceController::activate))
         .route("/deactivate/ip", delete().to(DeviceController::deactivate_by_ip))
         .route("/deactivate/{id}", delete().to(DeviceController::deactivate_by_id))
-        .route("/light/{id}", post().to(DeviceController::switch_light));
+        .route("/light/{id}", post().to(DeviceController::switch_light))
+        .route("/reconnect/{id}", post().to(DeviceController::reconnect_device));
 	}
 }
