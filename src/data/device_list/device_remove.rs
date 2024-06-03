@@ -1,9 +1,8 @@
 use super::*;
 
 impl DeviceList{
-    pub fn remove_device<F>(redis: &Redis, filter: F) -> DeviceListResult
-    where
-        F: Fn(&Device) -> bool,
+    pub fn remove_device<F>(redis: &Redis, filter: F) -> DeviceListResult 
+    where F: Fn(&Device) -> bool, 
     {
         let mut device_list = Self::get_device_list(&redis)?;
         device_list.devices.retain(|d| !filter(d));

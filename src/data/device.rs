@@ -81,6 +81,7 @@ impl Device {
         self.uptime = new_status.uptime;
         self.last_update = chrono::Utc::now().timestamp() as u64;
         self.status = true;
+        self.attempts = 0;
     }
 
 

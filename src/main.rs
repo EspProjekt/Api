@@ -1,12 +1,14 @@
 use actix_cors::Cors;
-use actix_web::{web::{self, scope}, App, HttpResponse, HttpServer};
+use actix_web::{web::{self, scope}, App, HttpRequest, HttpResponse, HttpServer};
 use data::device_list::DeviceList;
 use dotenv::dotenv;
 use modules::device_list::status_checker::service::DevicesStatusChecker;
 use router::Router;
+use serde::Deserialize;
 use state::State;
 use env_logger::Env;
 use log::{info, warn, error};
+use utils::Utils;
 
 
 pub mod modules;
@@ -16,6 +18,17 @@ pub mod state;
 pub mod data;
 pub mod utils;
 pub mod errors;
+
+#[derive(Debug, Deserialize)]
+struct testPayload {
+    name: String,
+}
+async fn index(req: HttpRequest, payload: web::Json<testPayload>) -> HttpResponse {
+    println!("{:#?}", payload);
+    let ip = Utils::get_ip(req).unwrap();
+    println!("IP: {}", ip);
+    HttpResponse::Ok().body("Hello world!")
+}
 
 
 #[actix_web::main]
@@ -39,6 +52,7 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(app_data.clone())
             .route("/health", web::get().to(health_check))
+            .route("/index", web::post().to(index))
             .service(scope("/device").configure(Router::device))
             .service(scope("/device-list").configure(Router::device_list))
     })

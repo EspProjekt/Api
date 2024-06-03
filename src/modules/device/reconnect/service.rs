@@ -1,6 +1,6 @@
 use actix_web::{web::Path, HttpResponse};
 use uuid::Uuid;
-use crate::{data::device_list::DeviceList, modules::device::DeviceController, state::AppState, utils::Utils};
+use crate::{data::device_list::DeviceList, modules::device::DeviceController, state::AppState};
 
 
 impl DeviceController{
