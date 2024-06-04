@@ -1,5 +1,6 @@
 use super::*;
 
+
 impl DeviceList{
     pub fn add_device(device: Device, redis: &Redis) -> DeviceListResult {
         let mut device_list = Self::get_device_list(redis)?;

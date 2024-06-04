@@ -7,14 +7,14 @@ use futures::stream::{self};
 use log::{error, info, warn};
 use std::time::Instant;
 use crate::data::device::{Device, Status};
-use crate::redis::Redis;
-use crate::{data::device_list::DeviceList, state::AppState, utils::Utils};
+use crate::state::AppStateRef;
+use crate::{data::device_list::DeviceList, utils::Utils};
 use crate::utils::constants::STATUS_CHECKER_INTERVAL_DEALY;
 use crate::utils::http_request::ReqResult;
 
 
 pub struct DevicesStatusChecker{
-    redis: Redis,
+    app_state: AppStateRef,
     devices: Vec<DeviceToCheck>,
 }
 
@@ -41,11 +41,16 @@ impl DeviceToCheck{
 
 
 impl DevicesStatusChecker {
-    fn new(redis: Redis) -> Self { Self { redis, devices: Vec::new() } }
+    fn new(app_state: &AppStateRef) -> Self { 
+        Self { 
+            app_state: app_state.clone(), 
+            devices: Vec::new() 
+        } 
+    }
 
 
-    pub async fn run(app_state: AppState) {
-        let mut status_checker = Self::new(app_state.redis.clone());
+    pub async fn run(app_state: &AppStateRef) {
+        let mut status_checker = Self::new(app_state);
         tokio::spawn(async move { status_checker.status_loop().await; });
     }
 
@@ -55,27 +60,33 @@ impl DevicesStatusChecker {
             sleep(Duration::from_secs(STATUS_CHECKER_INTERVAL_DEALY)).await;
             let start = Instant::now();
             
-            self.get_device_list();
+            self.get_device_list().await;
             self.update_devices().await;
+            self.app_state.lock().await.ws_manager.send_device_list();
 
             info!("Status check took: {:?} for {} devices!", start.elapsed(), self.devices.len());
         }
     }
 
 
-    fn get_device_list(&mut self) {
-        let devices = DeviceList::get_devices_to_update(&self.redis).unwrap();
-        self.devices = devices.into_iter().filter(|d| {
-            if d.status || d.retry { return true }
-
-            warn!("Device {} with ip: {} is dissabled, Skipping!", d.name, d.ip);
-            false
-        }).collect::<Vec<DeviceToCheck>>();
+    async fn get_device_list(&mut self) {
+        let state = self.app_state.lock().await;
+        let redis = &state.redis;
+        let devices = DeviceList::get_devices_to_update(redis).unwrap();
+        self.devices = devices.into_iter().filter(|d| self.check_device(d) ).collect::<Vec<DeviceToCheck>>();
     }
 
+
+    fn check_device(&self, device: &DeviceToCheck) -> bool {
+        if device.status || device.retry { return true }
+        warn!("Device {} with ip: {} is dissabled, Skipping!", device.name, device.ip);
+        false
+    }
+    
     
     async fn update_devices(&self) {
         if self.devices.is_empty() { return; }
+
         for result in self.send_requests().await {
             self.handle_result(result).await;
         }
@@ -84,8 +95,7 @@ impl DevicesStatusChecker {
 
     async fn send_requests(&self) -> Vec<ReqResult> {
         let stream = stream::iter(self.devices.clone()).map(|device| {
-            async move { 
-                Utils::send_request(device.ip, Method::GET, "status").await }
+            async move { Utils::send_request(device.ip, Method::GET, "status").await }
         });
 
         stream.buffer_unordered(self.devices.len()).collect::<Vec<ReqResult>>().await
@@ -93,18 +103,21 @@ impl DevicesStatusChecker {
 
 
     async fn handle_result(&self, result: ReqResult){
+        let state = self.app_state.lock().await; 
+        let redis = &state.redis;
+
         match result {
             Ok((resp, ip)) => {
                 let data = resp.text().await.unwrap();
                 let device_status = from_str::<Status>(&data).unwrap();
                 
                 info!("Device status: {:#?} for ip: {}", device_status, ip);
-                DeviceList::update_device(device_status, ip, &self.redis);
+                DeviceList::update_device(device_status, ip, redis);
             },
 
             Err((err, ip)) => {
                 error!("Error: {:?} for ip: {}", err, ip);
-                DeviceList::update_attempts(ip, &self.redis)
+                DeviceList::update_attempts(ip, redis)
             },
         }
     }

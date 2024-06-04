@@ -1,14 +1,14 @@
 use actix_cors::Cors;
-use actix_web::{web::{self, scope}, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{web::{self, scope}, App, HttpResponse, HttpServer};
 use data::device_list::DeviceList;
 use dotenv::dotenv;
 use modules::device_list::status_checker::service::DevicesStatusChecker;
 use router::Router;
-use serde::Deserialize;
-use state::State;
+use state::{AppState, State};
 use env_logger::Env;
-use log::{info, warn, error};
-use utils::Utils;
+use log::info;
+use env_logger::Builder;
+use web::{get, Data};
 
 
 pub mod modules;
@@ -18,27 +18,21 @@ pub mod state;
 pub mod data;
 pub mod utils;
 pub mod errors;
-
-#[derive(Debug, Deserialize)]
-struct testPayload {
-    name: String,
-}
-async fn index(req: HttpRequest, payload: web::Json<testPayload>) -> HttpResponse {
-    println!("{:#?}", payload);
-    let ip = Utils::get_ip(req).unwrap();
-    println!("IP: {}", ip);
-    HttpResponse::Ok().body("Hello world!")
-}
+pub mod ws;
 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
-	let app_data = web::Data::new(State::new());
-
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-    DeviceList::new(&app_data.redis).unwrap();
-    DevicesStatusChecker::run(app_data.clone()).await;
+    let app_state = State::new();
+    DevicesStatusChecker::run(&app_state).await;
+    
+    {
+        // w inny scope musi isc lock na app_data
+        let state = app_state.lock().await;
+        Builder::from_env(Env::default().default_filter_or("info")).init();
+        DeviceList::new(&state.redis).unwrap();
+    }
     
 	let server = HttpServer::new(move || {
         App::new()
@@ -50,19 +44,20 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials()
                     .max_age(3600),
             )
-            .app_data(app_data.clone())
-            .route("/health", web::get().to(health_check))
-            .route("/index", web::post().to(index))
+            .app_data(Data::new(app_state.clone()))
+            .route("/health", get().to(health_check))
+            .route("/session", get().to(Router::websocket))
             .service(scope("/device").configure(Router::device))
             .service(scope("/device-list").configure(Router::device_list))
     })
     .bind("0.0.0.0:5000")?;
 
     for addr in server.addrs() {info!("Server running on http://{}", addr);}
-
     server.run().await
 }
 
-async fn health_check() -> HttpResponse {
-	HttpResponse::Ok().into()
+async fn health_check(app_state: AppState) -> HttpResponse {
+    let data = app_state.lock().await;
+    data.ws_manager.send_device_list();
+    HttpResponse::Ok().into()
 }

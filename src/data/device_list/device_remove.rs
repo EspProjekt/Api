@@ -1,5 +1,6 @@
 use super::*;
 
+
 impl DeviceList{
     pub fn remove_device<F>(redis: &Redis, filter: F) -> DeviceListResult 
     where F: Fn(&Device) -> bool, 

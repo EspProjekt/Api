@@ -5,7 +5,7 @@ use crate::{data::device_list::DeviceList, modules::device::DeviceController, st
 
 impl DeviceController{
     pub async fn reconnect_device(device_id: Path<Uuid>, app_state: AppState) -> HttpResponse {
-        DeviceList::try_to_reconnect(device_id.into_inner(), &app_state.redis);
+        DeviceList::try_to_reconnect(device_id.into_inner(), &app_state.lock().await.redis);
         HttpResponse::Ok().into()
     }
 }

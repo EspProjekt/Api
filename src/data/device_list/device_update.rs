@@ -1,5 +1,6 @@
 use super::*;
 
+
 impl DeviceList{
     pub fn update_device(new_status: Status, device_ip: IpAddr, redis: &Redis) {
         let mut device = match Self::find_device_by_ip(device_ip, redis){

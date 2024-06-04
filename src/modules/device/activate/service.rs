@@ -16,11 +16,14 @@ impl DeviceController{
         };
 
         let payload = payload.into_inner();
+        let state = &app_state.lock().await;
         let device_data = DeviceCreateData::from(device_ip, payload);
         let device = Device::from(device_data);
 
-        match DeviceList::add_device(device, &app_state.redis){
+        match DeviceList::add_device(device, &state.redis){
             Ok(_) => {
+                state.ws_manager.send_device_list();
+
                 info!("Device added: {:?}", device_ip);
                 HttpResponse::Created().json(device_ip)
             },
