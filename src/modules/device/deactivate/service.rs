@@ -29,7 +29,7 @@ impl DeviceController{
         let state = &app_state.lock().await;
 
         match DeviceList::remove_device_by_id(device_id, &state.redis) {
-            Ok(_) => HttpResponse::NoContent().into(),
+            Ok(_) => HttpResponse::Ok().json(DeviceList::list_devices(&state.redis).unwrap()),
             Err(e) => e.into_response(),
         }
     }

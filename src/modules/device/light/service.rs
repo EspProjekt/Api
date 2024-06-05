@@ -6,13 +6,14 @@ use crate::{data::device_list::DeviceList, modules::device::DeviceController, st
 
 impl DeviceController{
     pub async fn switch_light(device_id: Path<Uuid>, app_state: AppState) -> HttpResponse{
-        let device_ip = match DeviceList::get_device_ip(device_id.into_inner(), &app_state.lock().await.redis) {
+        let state = &app_state.lock().await;
+        let device_ip = match DeviceList::get_device_ip(device_id.into_inner(), &state.redis) {
             Ok(ip) => ip,
             Err(e) => return e.into_response(),
         };
         
         match Utils::send_request(device_ip, Method::POST, "light").await {
-            Ok(_) => HttpResponse::Ok().into(),
+            Ok(_) => HttpResponse::Ok().json(DeviceList::list_devices(&state.redis).unwrap()),
             Err((e, _ip)) => e.into_response(),
         }
     }
