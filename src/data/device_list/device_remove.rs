@@ -6,6 +6,8 @@ impl DeviceList{
     where F: Fn(&Device) -> bool, 
     {
         let mut device_list = Self::get_device_list(&redis)?;
+
+        if !device_list.devices.iter().any(|d| filter(d)) { return Err(Error::new(404)) }
         device_list.devices.retain(|d| !filter(d));
 
         Self::set_device_list(redis, device_list)

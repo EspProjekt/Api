@@ -1,7 +1,8 @@
 use actix_web::{web::Path, HttpResponse};
 use reqwest::Method;
+use serde_json::from_str;
 use uuid::Uuid;
-use crate::{data::device_list::DeviceList, modules::device::DeviceController, state::AppState, utils::Utils};
+use crate::{data::{device::Status, device_list::DeviceList}, modules::device::DeviceController, state::AppState, utils::Utils};
 
 
 impl DeviceController{
@@ -13,7 +14,13 @@ impl DeviceController{
         };
         
         match Utils::send_request(device_ip, Method::POST, "light").await {
-            Ok(_) => HttpResponse::Ok().json(DeviceList::list_devices(&state.redis).unwrap()),
+            Ok((resp, ip)) => {
+                let data = resp.text().await.unwrap();
+                let device_status = from_str::<Status>(&data).unwrap();
+                
+                DeviceList::update_device(device_status, ip, &state.redis);
+                HttpResponse::Ok().json(DeviceList::list_devices(&state.redis).unwrap())
+            },
             Err((e, _ip)) => e.into_response(),
         }
     }
